@@ -1,0 +1,24 @@
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# env
+.env
+
+# vscode/intellij
+.vscode/
+.idea/
+
+# python build
+dist/
+build/
+
+# data
+data/*.tif
+
+# postgres
+*.db
+
+# logs
+*.log

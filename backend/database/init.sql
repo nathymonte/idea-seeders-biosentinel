@@ -15,7 +15,7 @@ CREATE TABLE environmental_reserves (
     state CHAR(2) NOT NULL,
     city VARCHAR(120),
     area_hectares NUMERIC(12, 2),
-    boundary GEOMETRY(POLYGON, 4674) NOT NULL,
+    boundary GEOMETRY(POLYGON, 4326) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

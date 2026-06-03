@@ -285,3 +285,100 @@ Ver logs:
 ```bash
 docker logs biosentinel-db
 ```
+## PostgreSQL / PostGIS
+
+### Abrir o terminal do PostgreSQL (psql)
+
+```bash
+docker exec -it biosentinel-db psql -U biosentinel -d biosentinel
+```
+
+---
+
+### Comandos úteis dentro do psql
+
+Listar tabelas:
+
+```sql
+\dt public.*
+```
+
+Descrever uma tabela:
+
+```sql
+\d environmental_reserves
+```
+
+Consultar dados:
+
+```sql
+SELECT * FROM users;
+```
+
+Ativar modo expandido (melhor visualização):
+
+```sql
+\x on
+```
+
+Sair do PostgreSQL:
+
+```sql
+\q
+```
+
+---
+
+### Executar um arquivo SQL
+
+#### PowerShell
+
+```powershell
+Get-Content .\database\seed.sql |
+docker exec -i biosentinel-db psql -U biosentinel -d biosentinel
+```
+
+#### CMD
+
+```cmd
+docker exec -i biosentinel-db psql -U biosentinel -d biosentinel < database\seed.sql
+```
+
+---
+
+### Reinicializar completamente o banco
+
+Remove o container e o volume do PostgreSQL:
+
+```bash
+docker compose down -v
+```
+
+Subir novamente:
+
+```bash
+docker compose up -d
+```
+
+Depois reaplicar os dados de exemplo:
+
+```powershell
+Get-Content .\database\seed.sql |
+docker exec -i biosentinel-db psql -U biosentinel -d biosentinel
+```
+
+---
+
+### Verificar containers em execução
+
+```bash
+docker ps
+```
+
+---
+
+### Ver logs do PostgreSQL
+
+```bash
+docker logs biosentinel-db
+```

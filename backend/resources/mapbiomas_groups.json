@@ -1,0 +1,18 @@
+{
+  "native_vegetation": {
+    "label": "Vegetação Nativa",
+    "classes": [3, 4, 5, 6, 11, 12]
+  },
+  "agriculture_or_pasture": {
+    "label": "Agropecuária / Mosaico de Usos",
+    "classes": [15, 19, 21]
+  },
+  "urban_or_non_vegetated": {
+    "label": "Área Urbana ou Não Vegetada",
+    "classes": [24, 25, 30]
+  },
+  "water": {
+    "label": "Água",
+    "classes": [33]
+  }
+}

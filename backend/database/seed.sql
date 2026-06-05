@@ -1,3 +1,5 @@
+SET client_encoding = 'UTF8';
+
 DELETE FROM land_cover_analysis;
 DELETE FROM alerts;
 DELETE FROM iot_sensor_readings;
@@ -9,8 +11,13 @@ ALTER SEQUENCE users_id_seq RESTART WITH 1;
 ALTER SEQUENCE environmental_reserves_id_seq RESTART WITH 1;
 ALTER SEQUENCE satellite_datasets_id_seq RESTART WITH 1;
 
-INSERT INTO users (name, email, role)
-VALUES ('Demo Admin', 'admin@biosentinel.com', 'ADMIN');
+INSERT INTO users (name, email, password_hash, role)
+VALUES (
+    'Demo Admin',
+    'admin@biosentinel.com',
+    '$2b$12$NJ/rV8pujpx0eS1Xaf/5DO.mOatq2bMO1BMcDsefmtozbs6EMZ3O6',
+    'ADMIN'
+);
 
 INSERT INTO environmental_reserves (
     user_id, name, state, city, area_hectares, boundary
@@ -23,6 +30,58 @@ VALUES (
     123.21,
     ST_GeomFromText(
         'POLYGON((-46.70 -23.60, -46.69 -23.60, -46.69 -23.59, -46.70 -23.59, -46.70 -23.60))',
+        4326
+    )
+);
+
+INSERT INTO environmental_reserves (
+    user_id,
+    name,
+    state,
+    city,
+    area_hectares,
+    boundary
+)
+VALUES (
+    1,
+    'Reserva Amazônia Demo',
+    'AM',
+    'Manaus',
+    400.00,
+    ST_GeomFromText(
+        'POLYGON((
+            -60.35 -2.05,
+            -60.33 -2.05,
+            -60.33 -2.03,
+            -60.35 -2.03,
+            -60.35 -2.05
+        ))',
+        4326
+    )
+);
+
+INSERT INTO environmental_reserves (
+    user_id,
+    name,
+    state,
+    city,
+    area_hectares,
+    boundary
+)
+VALUES (
+    1,
+    'Reserva Pantanal Demo',
+    'MS',
+    'Corumbá',
+    400.00,
+    ST_GeomFromText(
+        'POLYGON((
+        -57.65 -19.00,
+        -57.63 -19.00,
+        -57.63 -18.98,
+        -57.65 -18.98,
+        -57.65 -19.00
+        ))',
         4326
     )
 );

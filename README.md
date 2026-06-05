@@ -60,31 +60,6 @@ O sistema permite cadastrar reservas ambientais, importar datasets geográficos 
 
 ---
 
-## Estrutura do projeto
-
-```text
-idea-seeders-biosentinel/
-│
-├── backend/
-│   ├── main.py
-│   └── requirements.txt
-│
-├── frontend/
-│
-├── database/
-│   ├── init.sql
-│   └── seed.sql
-│
-├── data/
-│
-├── docs/
-│
-├── docker-compose.yml
-├── .gitignore
-└── README.md
-```
-
----
 
 ## Modelo de negócio
 
@@ -334,7 +309,7 @@ Sair do PostgreSQL:
 #### PowerShell
 
 ```powershell
-Get-Content .\database\seed.sql |
+Get-Content .\backend\database\seed.sql |
 docker exec -i biosentinel-db psql -U biosentinel -d biosentinel
 ```
 

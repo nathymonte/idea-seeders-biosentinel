@@ -3,7 +3,8 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
-from backend.database.models import EnvironmentalReserve, LandCoverAnalysis
+from backend.repositories.reserve_repository import ReserveRepository
+from backend.repositories.analysis_repository import AnalysisRepository
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -12,7 +13,8 @@ GROUPS_PATH = BASE_DIR / "backend" / "resources" / "mapbiomas_groups.json"
 
 class SummaryService:
     def __init__(self, db: Session):
-        self.db = db
+        self.reserve_repository = ReserveRepository(db)
+        self.analysis_repository = AnalysisRepository(db)
         self.groups = self._load_groups()
 
     def _load_groups(self):
@@ -20,20 +22,12 @@ class SummaryService:
             return json.load(file)
 
     def get_reserve_summary(self, reserve_id: int):
-        reserve = (
-            self.db.query(EnvironmentalReserve)
-            .filter(EnvironmentalReserve.id == reserve_id)
-            .first()
-        )
+        reserve = self.reserve_repository.find_by_id(reserve_id)
 
         if reserve is None:
             raise ValueError(f"Reserva com id={reserve_id} não encontrada.")
 
-        analysis = (
-            self.db.query(LandCoverAnalysis)
-            .filter(LandCoverAnalysis.reserve_id == reserve_id)
-            .all()
-        )
+        analysis = self.analysis_repository.find_by_reserve_id(reserve_id)
 
         if not analysis:
             raise ValueError(
@@ -41,7 +35,6 @@ class SummaryService:
             )
 
         dominant = max(analysis, key=lambda item: item.percentage)
-
         grouped_metrics = self._calculate_grouped_metrics(analysis)
 
         environmental_status = self._calculate_environmental_status(
@@ -51,8 +44,8 @@ class SummaryService:
         total_area_hectares = sum(float(item.area_hectares) for item in analysis)
 
         human_use_percentage = (
-                grouped_metrics["urban_or_non_vegetated"]["percentage"]
-                + grouped_metrics["agriculture_or_pasture"]["percentage"]
+            grouped_metrics["urban_or_non_vegetated"]["percentage"]
+            + grouped_metrics["agriculture_or_pasture"]["percentage"]
         )
 
         native_vegetation_percentage = grouped_metrics["native_vegetation"]["percentage"]
@@ -97,10 +90,10 @@ class SummaryService:
 
         return result
 
-    def _calculate_environmental_status(self, grouped_percentages):
-        native = grouped_percentages["native_vegetation"]["percentage"]
-        urban = grouped_percentages["urban_or_non_vegetated"]["percentage"]
-        agriculture = grouped_percentages["agriculture_or_pasture"]["percentage"]
+    def _calculate_environmental_status(self, grouped_metrics):
+        native = grouped_metrics["native_vegetation"]["percentage"]
+        urban = grouped_metrics["urban_or_non_vegetated"]["percentage"]
+        agriculture = grouped_metrics["agriculture_or_pasture"]["percentage"]
 
         human_use = urban + agriculture
 

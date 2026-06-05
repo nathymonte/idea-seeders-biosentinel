@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy.orm import Session
 
 from backend.database.connection import get_db
-from backend.database.models import SatelliteDataset
+from backend.repositories.dataset_repository import DatasetRepository
 
 
 router = APIRouter(
@@ -12,11 +12,30 @@ router = APIRouter(
     tags=["Datasets"]
 )
 
+
 class DatasetUpdateRequest(BaseModel):
     source: Optional[str] = None
     year: Optional[int] = None
     resolution_meters: Optional[int] = None
     file_path: Optional[str] = None
+
+
+@router.get("")
+def list_datasets(db: Session = Depends(get_db)):
+    repository = DatasetRepository(db)
+    datasets = repository.find_all()
+
+    return [
+        {
+            "id": dataset.id,
+            "source": dataset.source,
+            "year": dataset.year,
+            "resolution_meters": dataset.resolution_meters,
+            "file_path": dataset.file_path,
+        }
+        for dataset in datasets
+    ]
+
 
 @router.put("/{dataset_id}")
 def update_dataset(
@@ -24,11 +43,8 @@ def update_dataset(
     request: DatasetUpdateRequest,
     db: Session = Depends(get_db)
 ):
-    dataset = (
-        db.query(SatelliteDataset)
-        .filter(SatelliteDataset.id == dataset_id)
-        .first()
-    )
+    repository = DatasetRepository(db)
+    dataset = repository.find_by_id(dataset_id)
 
     if dataset is None:
         raise HTTPException(
@@ -48,8 +64,7 @@ def update_dataset(
     if request.file_path is not None:
         dataset.file_path = request.file_path
 
-    db.commit()
-    db.refresh(dataset)
+    dataset = repository.update(dataset)
 
     return {
         "message": "Dataset updated successfully.",
@@ -68,11 +83,8 @@ def delete_dataset(
     dataset_id: int,
     db: Session = Depends(get_db)
 ):
-    dataset = (
-        db.query(SatelliteDataset)
-        .filter(SatelliteDataset.id == dataset_id)
-        .first()
-    )
+    repository = DatasetRepository(db)
+    dataset = repository.find_by_id(dataset_id)
 
     if dataset is None:
         raise HTTPException(
@@ -80,8 +92,7 @@ def delete_dataset(
             detail=f"Dataset com id={dataset_id} não encontrado."
         )
 
-    db.delete(dataset)
-    db.commit()
+    repository.delete(dataset)
 
     return {
         "message": "Dataset deleted successfully.",

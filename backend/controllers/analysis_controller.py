@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.database.connection import get_db
-from backend.database.models import LandCoverAnalysis
+from backend.repositories.analysis_repository import AnalysisRepository
 from backend.services.mapbiomas_service import MapBiomasService
 from backend.services.summary_service import SummaryService
 
@@ -46,12 +46,8 @@ def get_reserve_analysis(
     reserve_id: int,
     db: Session = Depends(get_db)
 ):
-    analysis = (
-        db.query(LandCoverAnalysis)
-        .filter(LandCoverAnalysis.reserve_id == reserve_id)
-        .order_by(LandCoverAnalysis.percentage.desc())
-        .all()
-    )
+    repository = AnalysisRepository(db)
+    analysis = repository.find_by_reserve_id(reserve_id)
 
     return [
         {

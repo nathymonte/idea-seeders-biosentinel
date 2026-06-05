@@ -1,15 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy.orm import Session
 
 from backend.database.connection import get_db
-from backend.database.models import EnvironmentalReserve, LandCoverAnalysis
+from backend.repositories.reserve_repository import ReserveRepository
+
 
 router = APIRouter(
     prefix="/reserves",
     tags=["Reserves"]
 )
+
 
 class ReserveUpdateRequest(BaseModel):
     name: Optional[str] = None
@@ -17,17 +19,32 @@ class ReserveUpdateRequest(BaseModel):
     city: Optional[str] = None
     area_hectares: Optional[float] = None
 
+
+@router.get("")
+def list_reserves(db: Session = Depends(get_db)):
+    repository = ReserveRepository(db)
+    reserves = repository.find_all()
+
+    return [
+        {
+            "id": reserve.id,
+            "name": reserve.name,
+            "state": reserve.state,
+            "city": reserve.city,
+            "area_hectares": float(reserve.area_hectares),
+        }
+        for reserve in reserves
+    ]
+
+
 @router.put("/{reserve_id}")
 def update_reserve(
     reserve_id: int,
     request: ReserveUpdateRequest,
     db: Session = Depends(get_db)
 ):
-    reserve = (
-        db.query(EnvironmentalReserve)
-        .filter(EnvironmentalReserve.id == reserve_id)
-        .first()
-    )
+    repository = ReserveRepository(db)
+    reserve = repository.find_by_id(reserve_id)
 
     if reserve is None:
         raise HTTPException(
@@ -47,8 +64,7 @@ def update_reserve(
     if request.area_hectares is not None:
         reserve.area_hectares = request.area_hectares
 
-    db.commit()
-    db.refresh(reserve)
+    reserve = repository.update(reserve)
 
     return {
         "message": "Reserve updated successfully.",
@@ -67,11 +83,8 @@ def delete_reserve(
     reserve_id: int,
     db: Session = Depends(get_db)
 ):
-    reserve = (
-        db.query(EnvironmentalReserve)
-        .filter(EnvironmentalReserve.id == reserve_id)
-        .first()
-    )
+    repository = ReserveRepository(db)
+    reserve = repository.find_by_id(reserve_id)
 
     if reserve is None:
         raise HTTPException(
@@ -79,8 +92,7 @@ def delete_reserve(
             detail=f"Reserva com id={reserve_id} não encontrada."
         )
 
-    db.delete(reserve)
-    db.commit()
+    repository.delete(reserve)
 
     return {
         "message": "Reserve deleted successfully.",

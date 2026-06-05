@@ -4,15 +4,13 @@ from pathlib import Path
 import numpy as np
 import rasterio
 from rasterio.mask import mask
-from shapely import wkb
-from sqlalchemy.orm import Session
 from geoalchemy2.shape import to_shape
+from sqlalchemy.orm import Session
 
-from backend.database.models import (
-    EnvironmentalReserve,
-    SatelliteDataset,
-    LandCoverAnalysis,
-)
+from backend.database.models import LandCoverAnalysis
+from backend.repositories.reserve_repository import ReserveRepository
+from backend.repositories.dataset_repository import DatasetRepository
+from backend.repositories.analysis_repository import AnalysisRepository
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -22,6 +20,9 @@ CLASSES_PATH = BASE_DIR / "backend" / "resources" / "mapbiomas_classes.json"
 class MapBiomasService:
     def __init__(self, db: Session):
         self.db = db
+        self.reserve_repository = ReserveRepository(db)
+        self.dataset_repository = DatasetRepository(db)
+        self.analysis_repository = AnalysisRepository(db)
         self.class_names = self._load_class_names()
 
     def _load_class_names(self):
@@ -31,26 +32,17 @@ class MapBiomasService:
         return {int(key): value for key, value in data.items()}
 
     def analyze_reserve(self, reserve_id: int, dataset_id: int):
-        reserve = (
-            self.db.query(EnvironmentalReserve)
-            .filter(EnvironmentalReserve.id == reserve_id)
-            .first()
-        )
+        reserve = self.reserve_repository.find_by_id(reserve_id)
 
         if reserve is None:
             raise ValueError(f"Reserva com id={reserve_id} não encontrada.")
 
-        dataset = (
-            self.db.query(SatelliteDataset)
-            .filter(SatelliteDataset.id == dataset_id)
-            .first()
-        )
+        dataset = self.dataset_repository.find_by_id(dataset_id)
 
         if dataset is None:
             raise ValueError(f"Dataset com id={dataset_id} não encontrado.")
 
         raster_path = self._resolve_raster_path(dataset.file_path)
-
         geometry = to_shape(reserve.boundary)
 
         results = self._analyze_geometry(
@@ -58,13 +50,25 @@ class MapBiomasService:
             geometry=geometry
         )
 
-        self._replace_previous_analysis(
+        analyses = [
+            LandCoverAnalysis(
+                reserve_id=reserve_id,
+                dataset_id=dataset_id,
+                class_code=result["class_code"],
+                class_name=result["class_name"],
+                area_hectares=result["area_hectares"],
+                percentage=result["percentage"],
+            )
+            for result in results
+        ]
+
+        self.analysis_repository.delete_by_reserve_and_dataset(
             reserve_id=reserve_id,
-            dataset_id=dataset_id,
-            results=results
+            dataset_id=dataset_id
         )
 
-        self.db.commit()
+        self.analysis_repository.save_all(analyses)
+        self.analysis_repository.commit()
 
         return results
 
@@ -87,7 +91,6 @@ class MapBiomasService:
             )
 
             band = cropped_image[0]
-
             values, counts = np.unique(band.compressed(), return_counts=True)
 
         total_pixels = counts.sum()
@@ -96,7 +99,6 @@ class MapBiomasService:
             raise ValueError("Nenhum pixel válido encontrado para o polígono.")
 
         pixel_area_hectares = 0.01
-
         results = []
 
         for value, count in zip(values, counts):
@@ -113,25 +115,3 @@ class MapBiomasService:
             })
 
         return results
-
-    def _replace_previous_analysis(self, reserve_id: int, dataset_id: int, results: list):
-        (
-            self.db.query(LandCoverAnalysis)
-            .filter(
-                LandCoverAnalysis.reserve_id == reserve_id,
-                LandCoverAnalysis.dataset_id == dataset_id,
-            )
-            .delete()
-        )
-
-        for result in results:
-            analysis = LandCoverAnalysis(
-                reserve_id=reserve_id,
-                dataset_id=dataset_id,
-                class_code=result["class_code"],
-                class_name=result["class_name"],
-                area_hectares=result["area_hectares"],
-                percentage=result["percentage"],
-            )
-
-            self.db.add(analysis)

@@ -17,7 +17,7 @@ def test_calculate_environmental_status_critical():
     assert result == "CRITICAL"
 
 
-def test_calculate_grouped_percentages():
+def test_calculate_grouped_metrics():
     service = SummaryService.__new__(SummaryService)
 
     service.groups = {
@@ -32,10 +32,10 @@ def test_calculate_grouped_percentages():
     }
 
     analysis = [
-        SimpleNamespace(class_code=3, percentage=10.0),
-        SimpleNamespace(class_code=11, percentage=5.0),
-        SimpleNamespace(class_code=24, percentage=80.0),
-        SimpleNamespace(class_code=25, percentage=5.0),
+        SimpleNamespace(class_code=3, percentage=10.0, area_hectares=108.67),
+        SimpleNamespace(class_code=11, percentage=5.0, area_hectares=79.45),
+        SimpleNamespace(class_code=24, percentage=80.0, area_hectares=178.67),
+        SimpleNamespace(class_code=25, percentage=5.0, area_hectares=50.67),
     ]
 
     result = service._calculate_grouped_metrics(analysis)

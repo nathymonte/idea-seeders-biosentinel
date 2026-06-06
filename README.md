@@ -1,226 +1,86 @@
 # BioSentinel
 
-Plataforma web de monitoramento de áreas de reserva ambiental com base em dados de satélite e sensores IoT simulados.
+BioSentinel é uma plataforma de monitoramento ambiental baseada em dados de satélite do MapBiomas, desenvolvida como projeto acadêmico para a disciplina de Engenharia de Software.
+
+O sistema permite visualizar reservas ambientais, analisar a cobertura do solo e gerar relatórios ambientais utilizando dados geoespaciais armazenados em PostgreSQL/PostGIS.
 
 ---
 
-## Visão geral
-
-O **BioSentinel** é um protótipo full stack desenvolvido como projeto final do semestre com foco no desafio da indústria espacial.
-
-A proposta da plataforma é monitorar áreas de preservação ambiental utilizando:
-
-- dados de satélite do MapBiomas
-- banco de dados geoespacial
-- API REST
-- frontend web interativo
-- simulação de sensores IoT
-
-O sistema permite cadastrar reservas ambientais, importar datasets geográficos e gerar análises de cobertura do solo para apoiar a identificação de:
-
-- perda de vegetação
-- expansão urbana
-- alterações no uso do solo
-- alertas ambientais
-- monitoramento preventivo
-
----
-
-## Tecnologias
+## Tecnologias Utilizadas
 
 ### Backend
 
-- Python 3.11
+- Python
 - FastAPI
 - SQLAlchemy
-
-### Banco de dados
-
-- PostgreSQL
-- PostGIS
+- PostgreSQL + PostGIS
 
 ### Frontend
 
 - React
-
-### Geoprocessamento
-
-- Rasterio
-- GeoPandas
-- Shapely
+- Vite
+- React Router
+- React Leaflet
+- Recharts
 
 ### Infraestrutura
 
 - Docker
 - Docker Compose
 
-### Fonte de dados
-
-- MapBiomas Cobertura 10m
-
 ---
 
-
-## Modelo de negócio
-
-O sistema possui as seguintes entidades principais:
-
-### users
-
-Usuários da plataforma.
-
-Exemplo:
-
-- administrador
-- analista ambiental
-
-### environmental_reserves
-
-Reservas monitoradas.
-
-Contém:
-
-- nome
-- localização
-- área
-- polígono geográfico
-
-### satellite_datasets
-
-Arquivos de satélite importados.
-
-Exemplo:
-
-- MapBiomas 2023
-
-### land_cover_analysis
-
-Resultado da análise de cobertura do solo.
-
-Exemplo:
-
-- floresta
-- pastagem
-- área urbana
-
-### alerts
-
-Alertas ambientais.
-
-Exemplo:
-
-- perda de vegetação
-- risco de incêndio
-
-### iot_sensor_readings
-
-Leituras de sensores simulados.
-
-Exemplo:
-
-- temperatura
-- umidade
-- fumaça
-
----
-
-## Relacionamentos
-
-```text
-users
- 1 ───── N environmental_reserves
-
-environmental_reserves
- 1 ───── N land_cover_analysis
-
-satellite_datasets
- 1 ───── N land_cover_analysis
-
-environmental_reserves
- 1 ───── N alerts
-
-environmental_reserves
- 1 ───── N iot_sensor_readings
-```
-
----
-
-## Como rodar localmente
+## Como Executar o Projeto
 
 ### 1. Clonar o repositório
 
 ```bash
-git clone <url-do-repo>
+git clone <url-do-repositorio>
 cd idea-seeders-biosentinel
 ```
 
 ---
 
-### 2. Criar ambiente virtual
-
-Windows PowerShell:
-
-```powershell
-python -m venv backend/.venv
-```
-
-Ativar:
-
-```powershell
-.\backend\.venv\Scripts\Activate.ps1
-```
-
----
-
-### 3. Instalar dependências
-
-```bash
-pip install -r backend/requirements.txt
-```
-
----
-
-### 4. Subir PostgreSQL + PostGIS
+### 2. Subir o banco de dados
 
 ```bash
 docker compose up -d
 ```
 
-Verificar:
+O banco será criado automaticamente utilizando:
+
+- `backend/database/init.sql`
+- `backend/database/seed.sql`
+
+Não é necessário executar scripts manualmente.
+
+---
+
+### 3. Executar o Backend
+
+Criar ambiente virtual:
 
 ```bash
-docker ps
+cd backend
+
+python -m venv .venv
 ```
 
----
+Ativar o ambiente virtual:
 
-### 5. Entrar no PostgreSQL
+#### Windows
 
 ```bash
-docker exec -it biosentinel-db psql -U biosentinel -d biosentinel
+.venv\Scripts\activate
 ```
 
----
-
-### 6. Verificar tabelas
-
-Dentro do PostgreSQL:
-
-```sql
-\dt public.*
-```
-
----
-
-### 7. Popular com dados de exemplo
+Instalar dependências:
 
 ```bash
-docker exec -i biosentinel-db psql -U biosentinel -d biosentinel < database/seed.sql
+pip install -r requirements.txt
 ```
 
----
-
-### 8. Rodar backend
+Executar a API:
 
 ```bash
 uvicorn backend.main:app --reload
@@ -232,128 +92,100 @@ Swagger:
 http://127.0.0.1:8000/docs
 ```
 
-API raiz:
+---
+
+### 4. Executar o Frontend
+
+Em outro terminal:
+
+```bash
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+Aplicação:
 
 ```text
-http://127.0.0.1:8000/
+http://localhost:5173
 ```
 
 ---
 
-## Docker útil
+## Credenciais de Demonstração
 
-Parar containers:
+Usuário:
 
-```bash
-docker compose down
+```text
+admin@biosentinel.com
 ```
 
-Recriar do zero:
+Senha:
+
+```text
+Admin1234
+```
+
+---
+
+## Reservas Disponíveis
+
+O banco já é carregado com três reservas de demonstração:
+
+- Reserva Cantareira Demo
+- Reserva Amazônia Demo
+- Reserva Pantanal Demo
+
+As análises ambientais já estão persistidas no banco e podem ser visualizadas imediatamente após iniciar o sistema.
+
+---
+
+## Reiniciar Ambiente do Zero
+
+Caso seja necessário recriar completamente o banco:
 
 ```bash
 docker compose down -v
+
 docker compose up -d
 ```
 
-Ver logs:
+---
 
-```bash
-docker logs biosentinel-db
+## Acesso às Funcionalidades
+
+### Login
+
+```text
+/login
 ```
-## PostgreSQL / PostGIS
 
-### Abrir o terminal do PostgreSQL (psql)
+### Dashboard de Monitoramento
 
-```bash
-docker exec -it biosentinel-db psql -U biosentinel -d biosentinel
+```text
+/map
+```
+
+### Relatórios Ambientais
+
+```text
+/report/{id}
+```
+
+Exemplos:
+
+```text
+/report/1
+/report/2
+/report/3
 ```
 
 ---
 
-### Comandos úteis dentro do psql
+## Observação
 
-Listar tabelas:
+O arquivo GeoTIFF original do MapBiomas não é distribuído junto ao projeto devido ao seu tamanho.
 
-```sql
-\dt public.*
-```
-
-Descrever uma tabela:
-
-```sql
-\d environmental_reserves
-```
-
-Consultar dados:
-
-```sql
-SELECT * FROM users;
-```
-
-Ativar modo expandido (melhor visualização):
-
-```sql
-\x on
-```
-
-Sair do PostgreSQL:
-
-```sql
-\q
-```
-
----
-
-### Executar um arquivo SQL
-
-#### PowerShell
-
-```powershell
-Get-Content .\backend\database\seed.sql |
-docker exec -i biosentinel-db psql -U biosentinel -d biosentinel
-```
-
-#### CMD
-
-```cmd
-docker exec -i biosentinel-db psql -U biosentinel -d biosentinel < database\seed.sql
-```
-
----
-
-### Reinicializar completamente o banco
-
-Remove o container e o volume do PostgreSQL:
-
-```bash
-docker compose down -v
-```
-
-Subir novamente:
-
-```bash
-docker compose up -d
-```
-
-Depois reaplicar os dados de exemplo:
-
-```powershell
-Get-Content .\database\seed.sql |
-docker exec -i biosentinel-db psql -U biosentinel -d biosentinel
-```
-
----
-
-### Verificar containers em execução
-
-```bash
-docker ps
-```
-
----
-
-### Ver logs do PostgreSQL
-
-```bash
-docker logs biosentinel-db
-```
+As análises utilizadas na demonstração já estão armazenadas no banco através do script `seed.sql`, permitindo a execução completa do sistema sem a necessidade do arquivo raster original.

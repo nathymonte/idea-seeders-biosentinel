@@ -1,23 +1,19 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
 import { Link } from "react-router-dom";
 
 import api from "../api/api";
 import Sidebar from "../components/Sidebar";
 import SummaryCard from "../components/SummaryCard";
 import StatusBadge from "../components/StatusBadge";
-
-const RESERVE_COORDINATES = {
-  1: [-23.595, -46.695],
-  2: [-2.04, -60.34],
-  3: [-18.99, -57.64],
-};
+import RecenterMap from "../components/RecenterMap";
 
 function MapPage() {
   const [reserves, setReserves] = useState([]);
   const [selectedReserveId, setSelectedReserveId] = useState(null);
   const [summary, setSummary] = useState(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     async function loadReserves() {
@@ -51,8 +47,38 @@ function MapPage() {
     loadSummary();
   }, [selectedReserveId]);
 
+  const selectedReserve = reserves.find(
+    (reserve) => reserve.id === selectedReserveId
+  );
+
   const selectedCoordinates =
-    RESERVE_COORDINATES[selectedReserveId] || [-14.235, -51.925];
+    getPolygonCenter(selectedReserve?.boundary) || [-14.235, -51.925];
+
+  function geoJsonPolygonToLeafletPositions(boundary) {
+  if (!boundary || boundary.type !== "Polygon") return [];
+
+  return boundary.coordinates[0].map(([lng, lat]) => [lat, lng]);
+  }
+
+    function getPolygonCenter(boundary) {
+      if (!boundary || boundary.type !== "Polygon") return null;
+
+      const coordinates = boundary.coordinates[0];
+
+      const total = coordinates.reduce(
+        (acc, [lng, lat]) => {
+          acc.lat += lat;
+          acc.lng += lng;
+          return acc;
+        },
+        { lat: 0, lng: 0 }
+      );
+
+      return [
+        total.lat / coordinates.length,
+        total.lng / coordinates.length,
+      ];
+  }
 
   return (
     <div className="dashboard-layout">
@@ -60,9 +86,17 @@ function MapPage() {
         reserves={reserves}
         selectedReserveId={selectedReserveId}
         onSelectReserve={setSelectedReserveId}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       <main className="dashboard-main">
+        <button
+          className="mobile-menu-button"
+          onClick={() => setIsSidebarOpen(true)}
+        >
+          ☰ Reservas
+        </button>
         <header className="dashboard-header">
           <div>
             <h1>Monitoramento Ambiental</h1>
@@ -79,23 +113,37 @@ function MapPage() {
             scrollWheelZoom={true}
             className="map-container"
           >
+            <RecenterMap center={selectedCoordinates} />
             <TileLayer
               attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
             {reserves.map((reserve) => {
-              const position =
-                RESERVE_COORDINATES[reserve.id] || [-14.235, -51.925];
+              const polygonPositions = geoJsonPolygonToLeafletPositions(reserve.boundary);
+
+              if (!polygonPositions.length) return null;
 
               return (
-                <Marker key={reserve.id} position={position}>
+                <Polygon
+                  key={`polygon-${reserve.id}`}
+                  positions={polygonPositions}
+                  pathOptions={{
+                    color: reserve.id === selectedReserveId ? "#1b4332" : "#2d6a4f",
+                    fillColor: reserve.id === selectedReserveId ? "#95d5b2" : "#b7e4c7",
+                    fillOpacity: reserve.id === selectedReserveId ? 0.45 : 0.2,
+                    weight: reserve.id === selectedReserveId ? 3 : 1,
+                  }}
+                  eventHandlers={{
+                    click: () => setSelectedReserveId(reserve.id),
+                  }}
+                >
                   <Popup>
                     <strong>{reserve.name}</strong>
                     <br />
                     {reserve.city} - {reserve.state}
                   </Popup>
-                </Marker>
+                </Polygon>
               );
             })}
           </MapContainer>

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
+import json
 
 from backend.database.connection import get_db
 from backend.repositories.reserve_repository import ReserveRepository
@@ -23,7 +24,7 @@ class ReserveUpdateRequest(BaseModel):
 @router.get("")
 def list_reserves(db: Session = Depends(get_db)):
     repository = ReserveRepository(db)
-    reserves = repository.find_all()
+    reserves = repository.find_all_with_geojson()
 
     return [
         {
@@ -32,6 +33,7 @@ def list_reserves(db: Session = Depends(get_db)):
             "state": reserve.state,
             "city": reserve.city,
             "area_hectares": float(reserve.area_hectares),
+            "boundary": json.loads(reserve.boundary_geojson),
         }
         for reserve in reserves
     ]

@@ -1,16 +1,5 @@
 SET client_encoding = 'UTF8';
 
-DELETE FROM land_cover_analysis;
-DELETE FROM alerts;
-DELETE FROM iot_sensor_readings;
-DELETE FROM satellite_datasets;
-DELETE FROM environmental_reserves;
-DELETE FROM users;
-
-ALTER SEQUENCE users_id_seq RESTART WITH 1;
-ALTER SEQUENCE environmental_reserves_id_seq RESTART WITH 1;
-ALTER SEQUENCE satellite_datasets_id_seq RESTART WITH 1;
-
 INSERT INTO users (name, email, password_hash, role)
 VALUES (
     'Demo Admin',
@@ -24,12 +13,18 @@ INSERT INTO environmental_reserves (
 )
 VALUES (
     1,
-    'Reserva Demo São Paulo',
+    'Reserva Cantareira Demo',
     'SP',
     'São Paulo',
-    123.21,
+    497.29,
     ST_GeomFromText(
-        'POLYGON((-46.70 -23.60, -46.69 -23.60, -46.69 -23.59, -46.70 -23.59, -46.70 -23.60))',
+        'POLYGON((
+            -46.66 -23.43,
+            -46.62 -23.43,
+            -46.62 -23.39,
+            -46.66 -23.39,
+            -46.66 -23.43
+        ))',
         4326
     )
 );
@@ -105,9 +100,24 @@ INSERT INTO land_cover_analysis (
     percentage
 )
 VALUES
-(1, 1, 24, 'Área Urbanizada', 108.19, 87.81),
-(1, 1, 33, 'Rio, Lago e Oceano', 7.41, 6.01),
-(1, 1, 21, 'Mosaico de Usos', 6.97, 5.66),
-(1, 1, 25, 'Outra Área Não Vegetada', 0.48, 0.39),
-(1, 1, 3, 'Formação Florestal', 0.09, 0.07),
-(1, 1, 11, 'Campo Alagado e Área Pantanosa', 0.07, 0.06);
+(1, 1, 3,  'Formação Florestal', 1509.01, 75.86),
+(1, 1, 21, 'Mosaico de Usos', 237.09, 11.92),
+(1, 1, 24, 'Área Urbanizada', 204.98, 10.30),
+(1, 1, 9,  'Classe desconhecida', 17.93, 0.90),
+(1, 1, 15, 'Pastagem', 11.99, 0.60),
+(1, 1, 33, 'Rio, Lago e Oceano', 7.53, 0.38),
+(1, 1, 11, 'Campo Alagado e Área Pantanosa', 0.50, 0.03),
+(1, 1, 19, 'Lavoura Temporária', 0.11, 0.01),
+(1, 1, 12, 'Formação Campestre', 0.02, 0.00),
+(2, 1, 3,  'Formação Florestal', 458.76, 92.67),
+(2, 1, 11, 'Campo Alagado e Área Pantanosa', 6.98, 1.41),
+(2, 1, 21, 'Mosaico de Usos', 29.19, 5.90),
+(2, 1, 24, 'Área Urbanizada', 0.08, 0.02),
+(2, 1, 25, 'Outra Área Não Vegetada', 0.05, 0.01),
+(3, 1, 11, 'Campo Alagado e Área Pantanosa', 188.68, 37.94),
+(3, 1, 3,  'Formação Florestal', 295.50, 59.42),
+(3, 1, 21, 'Mosaico de Usos', 0.29, 0.06),
+(3, 1, 24, 'Área Urbanizada', 93.68, 18.84),
+(3, 1, 25, 'Outra Área Não Vegetada', 0.48, 0.09),
+(3, 1, 33, 'Rio, Lago e Oceano', 107.34, 21.58),
+(3, 1, 12, 'Formação Campestre', 0.12, 0.02);
